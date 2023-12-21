@@ -1,8 +1,8 @@
 {
-  "name": "monkey-xxx-xxx",
+  "name": "kintone-marvel-paste-attachment",
   "version": "0.0.1",
   "description": "write description here",
-  "main": "./main.js",
+  "main": "",
   "scripts": {
     "start": "webpack serve --config ./config/webpack.dev.js",
     "dev": "webpack --watch --config ./config/webpack.dev.js",
@@ -12,21 +12,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourname/your-app.git"
+    "url": "git+https://github.com/forestsheep911/kintone-marvel-paste-attachment.git"
   },
   "keywords": [
     "TamperMonkey",
-    "TypeScript"
+    "TypeScript",
+    "kintone"
   ],
-  "author": "you",
+  "author": "Bxu",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yourname/your-app/issues"
+    "url": "https://github.com/forestsheep911/kintone-marvel-paste-attachment/issues"
   },
-  "homepage": "https://github.com/yourname/your-app",
+  "homepage": "https://github.com/forestsheep911/kintone-marvel-paste-attachment",
   "devDependencies": {
     "@babel/core": "^7.17.9",
     "@babel/preset-env": "^7.16.11",
+    "@kintone/dts-gen": "^8.0.2",
     "@types/tampermonkey": "^4.0.5",
     "@typescript-eslint/eslint-plugin": "^5.19.0",
     "@typescript-eslint/parser": "^5.19.0",
@@ -47,5 +49,7 @@
     "webpack-cli": "^4.9.2",
     "webpack-dev-server": "^4.9.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@kintone/rest-api-client": "^5.0.4"
+  }
 }

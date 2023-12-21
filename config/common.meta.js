@@ -7,11 +7,11 @@ module.exports = {
   author: pj.author,
   copyright: pj.author,
   license: pj.license,
-  match: ['https://*'],
+  match: ['https://cndevqpofif.cybozu.cn/k/221/edit*'],
   require: [],
   'run-at': 'document-end',
   supportURL: pj.bugs.url,
   homepage: pj.homepage,
   grant: [],
-  icon: 'https://img.icons8.com/ios/50/000000/happy-eyes.png',
+  icon: 'https://img.icons8.com/plasticine/100/clipboard.png',
 }
