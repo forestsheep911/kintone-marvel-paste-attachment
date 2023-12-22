@@ -25,8 +25,10 @@ function generateHtmlFragment(fileKey: string) {
   return attachHtmlTemplate
 }
 
+type AttachFiledCode = { [property: string]: string }
+
 function extractFileTypes(obj: any) {
-  let result: { [property: string]: string } = {}
+  let result: AttachFiledCode = {}
   for (let key in obj) {
     if (obj[key] && typeof obj[key] === 'object') {
       if (obj[key].type === 'FILE') {
@@ -49,17 +51,17 @@ function findAttachContainer() {
   }
 }
 
-async function upFile(fileData: Blob) {
-  const APP_ID = '221'
-  const ATTACHMENT_FIELD_CODE = 'atta'
-  const FILE = {
+async function uploadFile(fileData: Blob) {
+  // const APP_ID = '221'
+  // const ATTACHMENT_FIELD_CODE = 'atta'
+  const fileInfo = {
     name: 'Hello.png',
     data: fileData,
   }
 
   // Upload a file and attach it to a record
   const { fileKey } = await client.file.uploadFile({
-    file: FILE,
+    file: fileInfo,
   })
   console.log(fileKey)
   return fileKey
@@ -108,35 +110,7 @@ async function readImageFromClipboard() {
       for (let type of clipboardItem.types) {
         if (/^image\/.*/.test(type)) {
           const blob = await clipboardItem.getType(type)
-          // console.log(blob.size)
-
-          const fileKey = await upFile(blob)
-          fileKeyVar = fileKey
-          const htmlFragment = generateHtmlFragment(fileKey)
-          const container = findAttachContainer()
-          // console.log(container)
-
-          if (container) {
-            // create a element with htmlFragment
-            const div = document.createElement('div')
-            div.innerHTML = htmlFragment
-
-            // append after container
-            container.appendChild(div.firstElementChild as HTMLElement)
-          }
-
-          let reader = new FileReader()
-          reader.onload = function () {
-            // console.log(this.result)
-
-            let img = document.createElement('img')
-            if (typeof this.result === 'string') {
-              img.src = this.result
-              // kintone unique structural processing
-              // document.body.appendChild(img)
-            }
-          }
-          reader.readAsDataURL(blob)
+          return blob
         }
       }
     }
@@ -145,12 +119,51 @@ async function readImageFromClipboard() {
   }
 }
 
+async function temp1(blob: Blob) {
+  // console.log(blob.size)
+
+  const fileKey = await uploadFile(blob)
+  fileKeyVar = fileKey
+  const htmlFragment = generateHtmlFragment(fileKey)
+  const container = findAttachContainer()
+  // console.log(container)
+
+  if (container) {
+    // create a element with htmlFragment
+    const div = document.createElement('div')
+    div.innerHTML = htmlFragment
+
+    // append after container
+    container.appendChild(div.firstElementChild as HTMLElement)
+  }
+
+  let reader = new FileReader()
+  reader.onload = function () {
+    // console.log(this.result)
+
+    let img = document.createElement('img')
+    if (typeof this.result === 'string') {
+      img.src = this.result
+      // kintone unique structural processing
+      // document.body.appendChild(img)
+    }
+  }
+  reader.readAsDataURL(blob)
+}
+
+function generateAttachImageButton(attachFieldCodeList: AttachFiledCode) {
+  
+}
+
 const app = () => {
   console.log('monkey jumping on the bed.')
 
   kintone.events.on(['app.record.create.show', 'app.record.edit.show'], (event) => {
+    // step 1: 得到所有附件的字段代码
     let allAttachmentFieldCode = extractFileTypes(event.record)
     console.log(allAttachmentFieldCode)
+    // step 2: 根据字段代码，生成【读剪切板中图片的按钮】，放在每个附件的元素里
+    generateAttachImageButton(allAttachmentFieldCode)
 
     return event
   })
