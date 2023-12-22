@@ -3,24 +3,30 @@ import { KintoneRestAPIClient } from '@kintone/rest-api-client'
 const client = new KintoneRestAPIClient()
 let fileKeyVar = ''
 function generateHtmlFragment(fileKey: string) {
+  // const attachHtmlTemplate = `
+  // <div id="p1hi0h79b814iokk6kucnfsk487-pre"
+  // class="plupload_delete input-file-thumbnail input-file-item-cybozu editable-file-item"
+  // data-file-id="p1hi0h79b814iokk6kucnfsk487">
+  // <div class="plupload_file_name" title="屏幕截图 2023-12-12 101722.png">
+  // 屏幕截图 2023-12-12 101722.png
+  // </div>
+  // <div class="plupload_file_action">
+  // <button id="p1hi0h79b814iokk6kucnfsk487-pre-remove" type="button"></button>
+  // </div>
+  // <div class="plupload_file_size">123 KB</div>
+  // <div class="plupload_file_thumbnail_preview_img">
+  // <img
+  // src="/k/api/blob/download.do?fileKey=${fileKey}&amp;h=150&amp;w=150&amp;flag=SHRINK&amp;_ref=https%3A%2F%2Fcndevqpofif.cybozu.cn%2Fk%2F221%2Fedit"
+  // alt="" title="屏幕截图 2023-12-12 101722.png" data-thumbnail-key="slide-11" class="gaia-ui-slideshow-thumbnail" />
+  // </div>
+  // <div class="plupload_clearer"></div>
+  // </div>
+  // `
   const attachHtmlTemplate = `
-  <div id="p1hi0h79b814iokk6kucnfsk487-pre"
-  class="plupload_delete input-file-thumbnail input-file-item-cybozu editable-file-item"
-  data-file-id="p1hi0h79b814iokk6kucnfsk487">
-  <div class="plupload_file_name" title="屏幕截图 2023-12-12 101722.png">
-  屏幕截图 2023-12-12 101722.png
-  </div>
-  <div class="plupload_file_action">
-  <button id="p1hi0h79b814iokk6kucnfsk487-pre-remove" type="button"></button>
-  </div>
-  <div class="plupload_file_size">123 KB</div>
-  <div class="plupload_file_thumbnail_preview_img">
+ 
   <img
   src="/k/api/blob/download.do?fileKey=${fileKey}&amp;h=150&amp;w=150&amp;flag=SHRINK&amp;_ref=https%3A%2F%2Fcndevqpofif.cybozu.cn%2Fk%2F221%2Fedit"
-  alt="" title="屏幕截图 2023-12-12 101722.png" data-thumbnail-key="slide-11" class="gaia-ui-slideshow-thumbnail" />
-  </div>
-  <div class="plupload_clearer"></div>
-  </div>
+  alt="" title="你上传的图片" data-thumbnail-key="slide-11" class="gaia-ui-slideshow-thumbnail" />
   `
   return attachHtmlTemplate
 }
@@ -126,7 +132,6 @@ async function temp1(blob: Blob) {
   fileKeyVar = fileKey
   const htmlFragment = generateHtmlFragment(fileKey)
   const container = findAttachContainer()
-  // console.log(container)
 
   if (container) {
     // create a element with htmlFragment
@@ -152,7 +157,26 @@ async function temp1(blob: Blob) {
 }
 
 function generateAttachImageButton(attachFieldCodeList: AttachFiledCode) {
-  
+  // find all attach file container
+  const containers = document.querySelectorAll('.input-file-filelist-cybozu.input-file-filelist-list-cybozu')
+  // console.log(containers)
+  // loop containers
+  for (let container of Array.from(containers)) {
+    console.log(container)
+    // new a button
+    let button = document.createElement('button')
+    // set button text
+    button.innerText = '读剪切板中图片'
+    // button click event
+    button.addEventListener('click', async () => {
+      const blob = await readImageFromClipboard()
+      if (blob) {
+        uploadFile(blob)
+      }
+    })
+    // add button to container
+    container.appendChild(button)
+  }
 }
 
 const app = () => {
