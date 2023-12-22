@@ -26,7 +26,7 @@ function generateHtmlFragment(fileKey: string) {
 }
 
 function extractFileTypes(obj: any) {
-  let result: any = {}
+  let result: { [property: string]: string } = {}
   for (let key in obj) {
     if (obj[key] && typeof obj[key] === 'object') {
       if (obj[key].type === 'FILE') {
@@ -149,14 +149,8 @@ const app = () => {
   console.log('monkey jumping on the bed.')
 
   kintone.events.on(['app.record.create.show', 'app.record.edit.show'], (event) => {
-    console.log(event)
-    const record = event.record
-    let input = {
-      // 你的对象
-    }
-
-    let result = extractFileTypes(input)
-    console.log(result)
+    let allAttachmentFieldCode = extractFileTypes(event.record)
+    console.log(allAttachmentFieldCode)
 
     return event
   })
