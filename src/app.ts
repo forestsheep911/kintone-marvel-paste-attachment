@@ -25,6 +25,23 @@ function generateHtmlFragment(fileKey: string) {
   return attachHtmlTemplate
 }
 
+function extractFileTypes(obj: any) {
+  let result: any = {}
+  for (let key in obj) {
+    if (obj[key] && typeof obj[key] === 'object') {
+      if (obj[key].type === 'FILE') {
+        result[key] = ''
+      } else {
+        let subResult = extractFileTypes(obj[key])
+        if (Object.keys(subResult).length > 0) {
+          result = { ...result, ...subResult }
+        }
+      }
+    }
+  }
+  return result
+}
+
 function findAttachContainer() {
   const container = document.querySelector('.input-file-filelist-list-cybozu')
   if (container) {
@@ -130,8 +147,21 @@ async function readImageFromClipboard() {
 
 const app = () => {
   console.log('monkey jumping on the bed.')
+
+  kintone.events.on(['app.record.create.show', 'app.record.edit.show'], (event) => {
+    console.log(event)
+    const record = event.record
+    let input = {
+      // 你的对象
+    }
+
+    let result = extractFileTypes(input)
+    console.log(result)
+
+    return event
+  })
   setInterval(() => {
-    readImageFromClipboard()
+    // readImageFromClipboard()
   }, 10000)
 
   kintone.events.on('app.record.create.submit.success', async function (event) {
@@ -142,7 +172,7 @@ const app = () => {
       id: event.recordId,
       record: {
         [ATTACHMENT_FIELD_CODE]: {
-          value: [fileKeyVar],
+          value: [{ fileKey: fileKeyVar }],
         },
       },
     })
