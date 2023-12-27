@@ -1,214 +1,234 @@
 import { KintoneRestAPIClient } from '@kintone/rest-api-client'
 
-const client = new KintoneRestAPIClient()
-let fileKeyVar = ''
-function generateHtmlFragment(fileKey: string) {
-  // const attachHtmlTemplate = `
-  // <div id="p1hi0h79b814iokk6kucnfsk487-pre"
-  // class="plupload_delete input-file-thumbnail input-file-item-cybozu editable-file-item"
-  // data-file-id="p1hi0h79b814iokk6kucnfsk487">
-  // <div class="plupload_file_name" title="屏幕截图 2023-12-12 101722.png">
-  // 屏幕截图 2023-12-12 101722.png
-  // </div>
-  // <div class="plupload_file_action">
-  // <button id="p1hi0h79b814iokk6kucnfsk487-pre-remove" type="button"></button>
-  // </div>
-  // <div class="plupload_file_size">123 KB</div>
-  // <div class="plupload_file_thumbnail_preview_img">
-  // <img
-  // src="/k/api/blob/download.do?fileKey=${fileKey}&amp;h=150&amp;w=150&amp;flag=SHRINK&amp;_ref=https%3A%2F%2Fcndevqpofif.cybozu.cn%2Fk%2F221%2Fedit"
-  // alt="" title="屏幕截图 2023-12-12 101722.png" data-thumbnail-key="slide-11" class="gaia-ui-slideshow-thumbnail" />
-  // </div>
-  // <div class="plupload_clearer"></div>
-  // </div>
-  // `
-  const attachHtmlTemplate = `
- 
-  <img
-  src="/k/api/blob/download.do?fileKey=${fileKey}&amp;h=150&amp;w=150&amp;flag=SHRINK&amp;_ref=https%3A%2F%2Fcndevqpofif.cybozu.cn%2Fk%2F221%2Fedit"
-  alt="" title="你上传的图片" data-thumbnail-key="slide-11" class="gaia-ui-slideshow-thumbnail" />
-  `
-  return attachHtmlTemplate
-}
-
-type AttachFiledCode = { [property: string]: string }
-
-function extractFileTypes(obj: any) {
-  let result: AttachFiledCode = {}
-  for (let key in obj) {
-    if (obj[key] && typeof obj[key] === 'object') {
-      if (obj[key].type === 'FILE') {
-        result[key] = ''
-      } else {
-        let subResult = extractFileTypes(obj[key])
-        if (Object.keys(subResult).length > 0) {
-          result = { ...result, ...subResult }
-        }
-      }
-    }
-  }
-  return result
-}
-
-function findAttachContainer() {
-  const container = document.querySelector('.input-file-filelist-list-cybozu')
-  if (container) {
-    return container
-  }
-}
-
-async function uploadFile(fileData: Blob) {
-  // const APP_ID = '221'
-  // const ATTACHMENT_FIELD_CODE = 'atta'
-  const fileInfo = {
-    name: 'Hello.png',
-    data: fileData,
-  }
-
-  // Upload a file and attach it to a record
-  const { fileKey } = await client.file.uploadFile({
-    file: fileInfo,
-  })
-  console.log(fileKey)
-  return fileKey
-  // const result = await client.record.addRecord({
-  //   app: APP_ID,
-  //   record: {
-  //     [ATTACHMENT_FIELD_CODE]: {
-  //       value: [{ fileKey }],
-  //     },
-  //   },
-  // })
-  // console.log(result)
-  // const id = result.id
-
-  // const { record } = await client.record.getRecord({
-  //   app: APP_ID,
-  //   id,
-  // })
-
-  // type FileInformation = {
-  //   contentType: string
-  //   fileKey: string
-  //   name: string
-  //   size: string
-  // }
-
-  // const data = await client.file.downloadFile({
-  //   fileKey: (record[ATTACHMENT_FIELD_CODE].value as FileInformation[])[0].fileKey,
-  // })
-
-  // console.log(data)
-}
-
-async function downFile(fileKey: string) {
-  // Download a file
-  const data = await client.file.downloadFile({
-    fileKey: fileKey,
-  })
-  console.log(data)
-}
-
-async function readImageFromClipboard() {
-  try {
-    const clipboardItems = await navigator.clipboard.read()
-    for (let clipboardItem of clipboardItems) {
-      for (let type of clipboardItem.types) {
-        if (/^image\/.*/.test(type)) {
-          const blob = await clipboardItem.getType(type)
-          return blob
-        }
-      }
-    }
-  } catch (err) {
-    console.error('Failed to read clipboard contents: ', err)
-  }
-}
-
-async function temp1(blob: Blob) {
-  // console.log(blob.size)
-
-  const fileKey = await uploadFile(blob)
-  fileKeyVar = fileKey
-  const htmlFragment = generateHtmlFragment(fileKey)
-  const container = findAttachContainer()
-
-  if (container) {
-    // create a element with htmlFragment
-    const div = document.createElement('div')
-    div.innerHTML = htmlFragment
-
-    // append after container
-    container.appendChild(div.firstElementChild as HTMLElement)
-  }
-
-  let reader = new FileReader()
-  reader.onload = function () {
-    // console.log(this.result)
-
-    let img = document.createElement('img')
-    if (typeof this.result === 'string') {
-      img.src = this.result
-      // kintone unique structural processing
-      // document.body.appendChild(img)
-    }
-  }
-  reader.readAsDataURL(blob)
-}
-
-function generateAttachImageButton(attachFieldCodeList: AttachFiledCode) {
-  // find all attach file container
-  const containers = document.querySelectorAll('.input-file-filelist-cybozu.input-file-filelist-list-cybozu')
-  // console.log(containers)
-  // loop containers
-  for (let container of Array.from(containers)) {
-    console.log(container)
-    // new a button
-    let button = document.createElement('button')
-    // set button text
-    button.innerText = '读剪切板中图片'
-    // button click event
-    button.addEventListener('click', async () => {
-      const blob = await readImageFromClipboard()
-      if (blob) {
-        uploadFile(blob)
-      }
-    })
-    // add button to container
-    container.appendChild(button)
-  }
-}
-
 const app = () => {
   console.log('monkey jumping on the bed.')
+  const client = new KintoneRestAPIClient()
+  let fileKeyVar = ''
+  type fieldCodeFileKeyPair = { [property: string]: { value: { fileKey: string }[] } }
 
-  kintone.events.on(['app.record.create.show', 'app.record.edit.show'], (event) => {
+  function createFileKeyStore() {
+    let uploadedfilekeys: fieldCodeFileKeyPair = {
+      fieldcode1: { value: [{ fileKey: 'b' }, { fileKey: 'c' }] },
+      fieldcode2: { value: [{ fileKey: 'k' }, { fileKey: 's' }] },
+    }
+
+    return {
+      initialize(fieldcodes: string[]) {
+        uploadedfilekeys = fieldcodes.reduce((acc, curr) => {
+          acc[curr] = { value: [] }
+          return acc
+        }, {} as fieldCodeFileKeyPair)
+      },
+      addFilekey(fieldcode: string, filekey: string) {
+        if (uploadedfilekeys.hasOwnProperty(fieldcode)) {
+          uploadedfilekeys[fieldcode].value.push({ fileKey: filekey })
+        } else {
+          uploadedfilekeys[fieldcode] = { value: [{ fileKey: filekey }] }
+        }
+      },
+      deleteFilekey(fieldcode: string, filekey: string) {
+        if (uploadedfilekeys.hasOwnProperty(fieldcode)) {
+          uploadedfilekeys[fieldcode].value = uploadedfilekeys[fieldcode].value.filter((key) => key.fileKey !== filekey)
+        }
+      },
+      getUploadedFileKeys() {
+        return uploadedfilekeys
+      },
+    }
+  }
+
+  // let fileKeyStore = createFileKeyStore()
+  // fileKeyStore.initialize(['fieldcode1', 'fieldcode2'])
+  // console.log(fileKeyStore.getUploadedFileKeys())
+
+  // let fileKeyStore = createFileKeyStore()
+  // fileKeyStore.addFilekey('fieldcode1', 'f1')
+  // fileKeyStore.addFilekey('fieldcode1', 'f2')
+  // fileKeyStore.addFilekey('fieldcode2', 'f3')
+  // console.log(fileKeyStore.getUploadedFileKeys())
+  // fileKeyStore.deleteFilekey('fieldcode1', 'f2')
+  // console.log(fileKeyStore.getUploadedFileKeys())
+
+  type AttachFiledCode = string[]
+
+  function extractFileTypes(obj: any): AttachFiledCode {
+    let result: AttachFiledCode = []
+    for (let key in obj) {
+      if (obj[key] && typeof obj[key] === 'object') {
+        if (obj[key].type === 'FILE') {
+          result.push(key)
+        }
+      }
+    }
+    return result
+  }
+
+  async function uploadFile(fileData: Blob) {
+    // const APP_ID = '221'
+    // const ATTACHMENT_FIELD_CODE = 'atta'
+    const fileInfo = {
+      name: 'Hello.png',
+      data: fileData,
+    }
+
+    // Upload a file and attach it to a record
+    const { fileKey } = await client.file.uploadFile({
+      file: fileInfo,
+    })
+    console.log(fileKey)
+    return fileKey
+    // const result = await client.record.addRecord({
+    //   app: APP_ID,
+    //   record: {
+    //     [ATTACHMENT_FIELD_CODE]: {
+    //       value: [{ fileKey }],
+    //     },
+    //   },
+    // })
+    // console.log(result)
+    // const id = result.id
+
+    // const { record } = await client.record.getRecord({
+    //   app: APP_ID,
+    //   id,
+    // })
+
+    // type FileInformation = {
+    //   contentType: string
+    //   fileKey: string
+    //   name: string
+    //   size: string
+    // }
+
+    // const data = await client.file.downloadFile({
+    //   fileKey: (record[ATTACHMENT_FIELD_CODE].value as FileInformation[])[0].fileKey,
+    // })
+
+    // console.log(data)
+  }
+
+  async function downFile(fileKey: string) {
+    // Download a file
+    const data = await client.file.downloadFile({
+      fileKey: fileKey,
+    })
+    console.log(data)
+  }
+
+  async function readImageFromClipboard() {
+    try {
+      const clipboardItems = await navigator.clipboard.read()
+      for (let clipboardItem of clipboardItems) {
+        for (let type of clipboardItem.types) {
+          if (/^image\/.*/.test(type)) {
+            const blob = await clipboardItem.getType(type)
+            return blob
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to read clipboard contents: ', err)
+    }
+  }
+
+  function generateImgFragment(fieldCode: string, fileKey: string) {
+    const attachHtmlTemplate = `
+    <img
+    src="/k/api/blob/download.do?fileKey=${fileKey}&amp;h=150&amp;w=150&amp;flag=SHRINK&amp;_ref=https%3A%2F%2Fcndevqpofif.cybozu.cn%2Fk%2F221%2Fedit"
+    alt="" title="你上传的图片" data-thumbnail-key="slide-11" class="gaia-ui-slideshow-thumbnail" />
+    `.trim()
+    const img = document.createElement('div')
+    img.innerHTML = attachHtmlTemplate
+    // header
+    const headerDiv = document.createElement('div')
+    headerDiv.style.display = 'flex'
+    headerDiv.style.justifyContent = 'space-between'
+    const fileNameSpan = document.createElement('span')
+    fileNameSpan.textContent = '你上传的图片'
+    const deleteButton = document.createElement('button')
+    deleteButton.textContent = '删除'
+    headerDiv.appendChild(fileNameSpan)
+    headerDiv.appendChild(deleteButton)
+    // outter block
+    const blockLi = document.createElement('li')
+    blockLi.classList.add('file-image-container-gaia')
+    blockLi.appendChild(headerDiv)
+    blockLi.appendChild(img.firstChild!)
+    // delete button event
+    deleteButton.addEventListener('click', () => {
+      fileKeyStore.deleteFilekey(fieldCode, fileKey)
+      console.log('now filekeys is:', fileKeyStore.getUploadedFileKeys())
+      blockLi.remove()
+    })
+    return blockLi
+  }
+
+  function generateAttachImageButton(attachFieldCodeList: AttachFiledCode) {
+    // find all attach file container
+    const containers = attachFieldCodeList.map((fieldCode) => {
+      const container = kintone.app.record.getFieldElement(fieldCode)
+      if (container) {
+        return { dom: container, fieldCode: fieldCode }
+      }
+    })
+    console.log(containers)
+
+    // loop containers
+    for (let container of Array.from(containers)) {
+      if (!container) {
+        continue
+      }
+      console.log(container)
+      let button = document.createElement('button')
+      button.innerText = '读剪切板中图片'
+      button.addEventListener('click', async () => {
+        const blob = await readImageFromClipboard()
+        if (blob && container) {
+          const filekey = await uploadFile(blob)
+          fileKeyStore.addFilekey(container.fieldCode, filekey)
+          console.log('now filekeys is:', fileKeyStore.getUploadedFileKeys())
+          const ul = container.dom.querySelector('ul')
+          if (ul) {
+            const li = document.createElement('li')
+            ul.appendChild(generateImgFragment(container.fieldCode, filekey))
+          }
+        }
+      })
+      // add button to container
+      container.dom.appendChild(button)
+    }
+  }
+
+  let fileKeyStore = createFileKeyStore()
+
+  async function updateRecord() {
+    const files = fileKeyStore.getUploadedFileKeys()
+    const result = await client.record.updateRecord({
+      app: kintone.app.getId()!,
+      id: kintone.app.record.getId()!,
+      record: files,
+    })
+    location.reload()
+  }
+
+  kintone.events.on(['app.record.detail.show'], (event) => {
+    console.log(event.record)
+
     // step 1: 得到所有附件的字段代码
     let allAttachmentFieldCode = extractFileTypes(event.record)
-    console.log(allAttachmentFieldCode)
+    // console.log(allAttachmentFieldCode)
     // step 2: 根据字段代码，生成【读剪切板中图片的按钮】，放在每个附件的元素里
     generateAttachImageButton(allAttachmentFieldCode)
-
-    return event
-  })
-  setInterval(() => {
-    // readImageFromClipboard()
-  }, 10000)
-
-  kintone.events.on('app.record.create.submit.success', async function (event) {
-    const ATTACHMENT_FIELD_CODE = 'atta'
-
-    const result = await client.record.updateRecord({
-      app: event.appId,
-      id: event.recordId,
-      record: {
-        [ATTACHMENT_FIELD_CODE]: {
-          value: [{ fileKey: fileKeyVar }],
-        },
-      },
+    // step 3: 初始化fileKeyStore
+    fileKeyStore.initialize(allAttachmentFieldCode)
+    // step 4: 再空白处生成一个【提交】按钮，点击后，更新record
+    const headerMenuSpace = kintone.app.record.getHeaderMenuSpaceElement()
+    let updateButton = document.createElement('button')
+    updateButton.innerText = '提交'
+    updateButton.addEventListener('click', () => {
+      updateRecord()
     })
-    console.log(result)
-    console.log(event)
+    headerMenuSpace?.appendChild(updateButton)
     return event
   })
 }
