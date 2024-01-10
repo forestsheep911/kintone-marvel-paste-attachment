@@ -1,8 +1,16 @@
-import { KintoneRestAPIClient } from '@kintone/rest-api-client'
+// import { KintoneRestAPIClient } from '@kintone/rest-api-client'
+declare global {
+  interface Window {
+    KintoneRestAPIClient: any
+  }
+}
 
 const app = () => {
   console.log('monkey jumping on the bed.')
-  const client = new KintoneRestAPIClient()
+  // const kintoneRestAPIClient = new KintoneRestAPIClient()
+
+  const kintoneRestAPIClient = new window.KintoneRestAPIClient()
+
   let fileKeyVar = ''
   type fieldCodeFileKeyPair = { [property: string]: { value: { fileKey: string }[] } }
 
@@ -72,7 +80,7 @@ const app = () => {
     }
 
     // Upload a file and attach it to a record
-    const { fileKey } = await client.file.uploadFile({
+    const { fileKey } = await kintoneRestAPIClient.file.uploadFile({
       file: fileInfo,
     })
     console.log(fileKey)
@@ -109,7 +117,7 @@ const app = () => {
 
   async function downFile(fileKey: string) {
     // Download a file
-    const data = await client.file.downloadFile({
+    const data = await kintoneRestAPIClient.file.downloadFile({
       fileKey: fileKey,
     })
     console.log(data)
@@ -135,7 +143,7 @@ const app = () => {
     const attachHtmlTemplate = `
     <img
     src="/k/api/blob/download.do?fileKey=${fileKey}&amp;h=150&amp;w=150&amp;flag=SHRINK&amp;_ref=https%3A%2F%2Fcndevqpofif.cybozu.cn%2Fk%2F221%2Fedit"
-    alt="" title="你上传的图片" data-thumbnail-key="slide-11" class="gaia-ui-slideshow-thumbnail" />
+    alt="" title="your picture" data-thumbnail-key="slide-11" class="gaia-ui-slideshow-thumbnail" />
     `.trim()
     const img = document.createElement('div')
     img.innerHTML = attachHtmlTemplate
@@ -144,9 +152,9 @@ const app = () => {
     headerDiv.style.display = 'flex'
     headerDiv.style.justifyContent = 'space-between'
     const fileNameSpan = document.createElement('span')
-    fileNameSpan.textContent = '你上传的图片'
+    fileNameSpan.textContent = 'your picture'
     const deleteButton = document.createElement('button')
-    deleteButton.textContent = '删除'
+    deleteButton.textContent = '削除'
     headerDiv.appendChild(fileNameSpan)
     headerDiv.appendChild(deleteButton)
     // outter block
@@ -180,7 +188,7 @@ const app = () => {
       }
       console.log(container)
       let button = document.createElement('button')
-      button.innerText = '读剪切板中图片'
+      button.innerText = 'クリックボードから画像を貼り付け'
       button.addEventListener('click', async () => {
         const blob = await readImageFromClipboard()
         if (blob && container) {
@@ -189,7 +197,7 @@ const app = () => {
           console.log('now filekeys is:', fileKeyStore.getUploadedFileKeys())
           const ul = container.dom.querySelector('ul')
           if (ul) {
-            const li = document.createElement('li')
+            // const li = document.createElement('li')
             ul.appendChild(generateImgFragment(container.fieldCode, filekey))
           }
         }
@@ -203,12 +211,27 @@ const app = () => {
 
   async function updateRecord() {
     const files = fileKeyStore.getUploadedFileKeys()
-    const result = await client.record.updateRecord({
+    const result = await kintoneRestAPIClient.record.updateRecord({
       app: kintone.app.getId()!,
       id: kintone.app.record.getId()!,
       record: files,
     })
     location.reload()
+  }
+
+  function getAlredayExsitFileKeys(record: any) {
+    for (let key in record) {
+      if (record[key] && typeof record[key] === 'object') {
+        if (record[key].type === 'FILE') {
+          // loop record[key].value
+          for (let item of record[key].value) {
+            fileKeyStore.addFilekey(key, item.fileKey)
+          }
+        }
+      }
+    }
+    console.log('exist file keys are:')
+    console.log(fileKeyStore.getUploadedFileKeys())
   }
 
   kintone.events.on(['app.record.detail.show'], (event) => {
@@ -221,10 +244,11 @@ const app = () => {
     generateAttachImageButton(allAttachmentFieldCode)
     // step 3: 初始化fileKeyStore
     fileKeyStore.initialize(allAttachmentFieldCode)
-    // step 4: 再空白处生成一个【提交】按钮，点击后，更新record
+    getAlredayExsitFileKeys(event.record)
+    // step 4: 在空白处生成一个【提交】按钮，点击后，更新record
     const headerMenuSpace = kintone.app.record.getHeaderMenuSpaceElement()
     let updateButton = document.createElement('button')
-    updateButton.innerText = '提交'
+    updateButton.innerText = '画像一括保存'
     updateButton.addEventListener('click', () => {
       updateRecord()
     })
