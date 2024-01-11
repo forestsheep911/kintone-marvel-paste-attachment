@@ -1,7 +1,7 @@
 {
   "name": "kintone-marvel-paste-attachment",
-  "version": "0.0.1",
-  "description": "write description here",
+  "version": "0.0.2",
+  "description": "Allows you to paste images from the clipboard into the attachment field of kintone.",
   "main": "",
   "scripts": {
     "start": "webpack serve --config ./config/webpack.dev.js",
@@ -32,6 +32,7 @@
     "@types/tampermonkey": "^4.0.5",
     "@typescript-eslint/eslint-plugin": "^5.19.0",
     "@typescript-eslint/parser": "^5.19.0",
+    "@types/uuid": "^9.0.7",
     "babel-loader": "^8.2.4",
     "eslint": "^8.13.0",
     "eslint-config-prettier": "^8.5.0",
@@ -50,6 +51,7 @@
     "webpack-dev-server": "^4.9.0"
   },
   "dependencies": {
-    "@kintone/rest-api-client": "^5.0.4"
+    "@kintone/rest-api-client": "^5.0.4",
+    "uuid": "^9.0.1"
   }
 }

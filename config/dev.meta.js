@@ -5,7 +5,8 @@ module.exports = {
   match: ['https://cndevqpofif.cybozu.cn/k/221/show*'],
   grant: ['GM_getValue', 'GM_setValue', 'GM_addValueChangeListener'],
   require: [
+    'https://unpkg.com/@kintone/rest-api-client@latest/umd/KintoneRestAPIClient.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuidv4.min.js',
     `file://${resolve(__dirname, '../dist/dev').replaceAll('\\', '/')}/${pj.name}.script.js`,
-    'https://js.cybozu.com/kintone-rest-api-client/5.0.5/KintoneRestAPIClient.min.js',
   ],
 }

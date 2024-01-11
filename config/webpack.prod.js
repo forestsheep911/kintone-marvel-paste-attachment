@@ -1,10 +1,10 @@
 const { resolve } = require('path')
 const webpack = require('webpack')
-const devBanner = require('./dev.meta.js')
+const banner = require('./common.meta.js')
 const { baseOptions, getBanner } = require('./webpack.config.base')
 
 module.exports = () => {
-  baseOptions.output.filename = `${devBanner.name}.js`
+  baseOptions.output.filename = `${banner.name}.js`
   baseOptions.output.path = resolve(__dirname, '../dist/store')
   baseOptions.plugins.push(
     new webpack.BannerPlugin({
@@ -17,7 +17,7 @@ module.exports = () => {
     }),
   )
   baseOptions.mode = 'production'
-  // baseOptions.externals = {}
+  baseOptions.externals = { uuid: 'uuid' }
 
   return baseOptions
 }

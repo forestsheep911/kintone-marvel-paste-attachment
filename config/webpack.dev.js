@@ -55,7 +55,7 @@ module.exports = () => {
     watchFiles: ['src/**/*', 'public/**/*'],
   }
   baseOptions.mode = 'development'
-  baseOptions.externals = { '@kintone/rest-api-client': 'KintoneRestAPIClient' }
+  baseOptions.externals = { '@kintone/rest-api-client': 'KintoneRestAPIClient', uuid: 'uuid' }
 
   return baseOptions
 }

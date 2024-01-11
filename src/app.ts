@@ -1,25 +1,17 @@
-// import { KintoneRestAPIClient } from '@kintone/rest-api-client'
 declare global {
   interface Window {
-    KintoneRestAPIClient: any
+    KintoneRestAPIClient: typeof import('@kintone/rest-api-client').KintoneRestAPIClient
+    uuidv4: typeof import('uuid').v4
   }
 }
 
 const app = () => {
-  console.log('monkey jumping on the bed.')
-  // const kintoneRestAPIClient = new KintoneRestAPIClient()
-
   const kintoneRestAPIClient = new window.KintoneRestAPIClient()
-
-  let fileKeyVar = ''
   type fieldCodeFileKeyPair = { [property: string]: { value: { fileKey: string }[] } }
+  type AttachFiledCode = string[]
 
   function createFileKeyStore() {
-    let uploadedfilekeys: fieldCodeFileKeyPair = {
-      fieldcode1: { value: [{ fileKey: 'b' }, { fileKey: 'c' }] },
-      fieldcode2: { value: [{ fileKey: 'k' }, { fileKey: 's' }] },
-    }
-
+    let uploadedfilekeys: fieldCodeFileKeyPair = {}
     return {
       initialize(fieldcodes: string[]) {
         uploadedfilekeys = fieldcodes.reduce((acc, curr) => {
@@ -28,14 +20,14 @@ const app = () => {
         }, {} as fieldCodeFileKeyPair)
       },
       addFilekey(fieldcode: string, filekey: string) {
-        if (uploadedfilekeys.hasOwnProperty(fieldcode)) {
+        if (Object.prototype.hasOwnProperty.call(uploadedfilekeys, fieldcode)) {
           uploadedfilekeys[fieldcode].value.push({ fileKey: filekey })
         } else {
           uploadedfilekeys[fieldcode] = { value: [{ fileKey: filekey }] }
         }
       },
       deleteFilekey(fieldcode: string, filekey: string) {
-        if (uploadedfilekeys.hasOwnProperty(fieldcode)) {
+        if (Object.prototype.hasOwnProperty.call(uploadedfilekeys, fieldcode)) {
           uploadedfilekeys[fieldcode].value = uploadedfilekeys[fieldcode].value.filter((key) => key.fileKey !== filekey)
         }
       },
@@ -45,23 +37,9 @@ const app = () => {
     }
   }
 
-  // let fileKeyStore = createFileKeyStore()
-  // fileKeyStore.initialize(['fieldcode1', 'fieldcode2'])
-  // console.log(fileKeyStore.getUploadedFileKeys())
-
-  // let fileKeyStore = createFileKeyStore()
-  // fileKeyStore.addFilekey('fieldcode1', 'f1')
-  // fileKeyStore.addFilekey('fieldcode1', 'f2')
-  // fileKeyStore.addFilekey('fieldcode2', 'f3')
-  // console.log(fileKeyStore.getUploadedFileKeys())
-  // fileKeyStore.deleteFilekey('fieldcode1', 'f2')
-  // console.log(fileKeyStore.getUploadedFileKeys())
-
-  type AttachFiledCode = string[]
-
   function extractFileTypes(obj: any): AttachFiledCode {
-    let result: AttachFiledCode = []
-    for (let key in obj) {
+    const result: AttachFiledCode = []
+    for (const key in obj) {
       if (obj[key] && typeof obj[key] === 'object') {
         if (obj[key].type === 'FILE') {
           result.push(key)
@@ -72,10 +50,8 @@ const app = () => {
   }
 
   async function uploadFile(fileData: Blob) {
-    // const APP_ID = '221'
-    // const ATTACHMENT_FIELD_CODE = 'atta'
     const fileInfo = {
-      name: 'Hello.png',
+      name: `${window.uuidv4()}.png`,
       data: fileData,
     }
 
@@ -83,51 +59,14 @@ const app = () => {
     const { fileKey } = await kintoneRestAPIClient.file.uploadFile({
       file: fileInfo,
     })
-    console.log(fileKey)
     return fileKey
-    // const result = await client.record.addRecord({
-    //   app: APP_ID,
-    //   record: {
-    //     [ATTACHMENT_FIELD_CODE]: {
-    //       value: [{ fileKey }],
-    //     },
-    //   },
-    // })
-    // console.log(result)
-    // const id = result.id
-
-    // const { record } = await client.record.getRecord({
-    //   app: APP_ID,
-    //   id,
-    // })
-
-    // type FileInformation = {
-    //   contentType: string
-    //   fileKey: string
-    //   name: string
-    //   size: string
-    // }
-
-    // const data = await client.file.downloadFile({
-    //   fileKey: (record[ATTACHMENT_FIELD_CODE].value as FileInformation[])[0].fileKey,
-    // })
-
-    // console.log(data)
-  }
-
-  async function downFile(fileKey: string) {
-    // Download a file
-    const data = await kintoneRestAPIClient.file.downloadFile({
-      fileKey: fileKey,
-    })
-    console.log(data)
   }
 
   async function readImageFromClipboard() {
     try {
       const clipboardItems = await navigator.clipboard.read()
-      for (let clipboardItem of clipboardItems) {
-        for (let type of clipboardItem.types) {
+      for (const clipboardItem of clipboardItems) {
+        for (const type of clipboardItem.types) {
           if (/^image\/.*/.test(type)) {
             const blob = await clipboardItem.getType(type)
             return blob
@@ -135,26 +74,32 @@ const app = () => {
         }
       }
     } catch (err) {
-      console.error('Failed to read clipboard contents: ', err)
+      console.error(err)
     }
   }
 
-  function generateImgFragment(fieldCode: string, fileKey: string) {
+  function generateImgFragment(fieldCode: string, fileKey: string, blobSize: number) {
     const attachHtmlTemplate = `
     <img
     src="/k/api/blob/download.do?fileKey=${fileKey}&amp;h=150&amp;w=150&amp;flag=SHRINK&amp;_ref=https%3A%2F%2Fcndevqpofif.cybozu.cn%2Fk%2F221%2Fedit"
-    alt="" title="your picture" data-thumbnail-key="slide-11" class="gaia-ui-slideshow-thumbnail" />
+    alt="" data-thumbnail-key="slide-11" class="gaia-ui-slideshow-thumbnail" />
     `.trim()
     const img = document.createElement('div')
     img.innerHTML = attachHtmlTemplate
+    ;(img.firstChild! as HTMLElement).style.marginTop = '1em'
     // header
     const headerDiv = document.createElement('div')
     headerDiv.style.display = 'flex'
-    headerDiv.style.justifyContent = 'space-between'
+    headerDiv.style.alignItems = 'center'
+    // headerDiv.style.justifyContent = 'space-between'
     const fileNameSpan = document.createElement('span')
-    fileNameSpan.textContent = 'your picture'
+    fileNameSpan.textContent = `${Math.round(blobSize / 1024)} KB`
     const deleteButton = document.createElement('button')
-    deleteButton.textContent = '削除'
+    deleteButton.style.marginLeft = '1em'
+    deleteButton.classList.add('gaia-ui-actionmenu-save')
+    deleteButton.textContent = 'delete'
+    deleteButton.style.width = 'fit-content'
+    deleteButton.style.minWidth = 'unset'
     headerDiv.appendChild(fileNameSpan)
     headerDiv.appendChild(deleteButton)
     // outter block
@@ -165,7 +110,6 @@ const app = () => {
     // delete button event
     deleteButton.addEventListener('click', () => {
       fileKeyStore.deleteFilekey(fieldCode, fileKey)
-      console.log('now filekeys is:', fileKeyStore.getUploadedFileKeys())
       blockLi.remove()
     })
     return blockLi
@@ -179,26 +123,27 @@ const app = () => {
         return { dom: container, fieldCode: fieldCode }
       }
     })
-    console.log(containers)
 
     // loop containers
-    for (let container of Array.from(containers)) {
+    for (const container of Array.from(containers)) {
       if (!container) {
         continue
       }
-      console.log(container)
-      let button = document.createElement('button')
-      button.innerText = 'クリックボードから画像を貼り付け'
+      const button = document.createElement('button')
+      button.style.marginTop = '1em'
+      button.classList.add('gaia-ui-actionmenu-save')
+      button.style.width = 'fit-content'
+      button.style.minWidth = 'unset'
+      button.innerText = 'paste clipboard'
       button.addEventListener('click', async () => {
         const blob = await readImageFromClipboard()
         if (blob && container) {
           const filekey = await uploadFile(blob)
           fileKeyStore.addFilekey(container.fieldCode, filekey)
-          console.log('now filekeys is:', fileKeyStore.getUploadedFileKeys())
           const ul = container.dom.querySelector('ul')
           if (ul) {
             // const li = document.createElement('li')
-            ul.appendChild(generateImgFragment(container.fieldCode, filekey))
+            ul.appendChild(generateImgFragment(container.fieldCode, filekey, blob.size))
           }
         }
       })
@@ -206,8 +151,6 @@ const app = () => {
       container.dom.appendChild(button)
     }
   }
-
-  let fileKeyStore = createFileKeyStore()
 
   async function updateRecord() {
     const files = fileKeyStore.getUploadedFileKeys()
@@ -220,26 +163,21 @@ const app = () => {
   }
 
   function getAlredayExsitFileKeys(record: any) {
-    for (let key in record) {
+    for (const key in record) {
       if (record[key] && typeof record[key] === 'object') {
         if (record[key].type === 'FILE') {
           // loop record[key].value
-          for (let item of record[key].value) {
+          for (const item of record[key].value) {
             fileKeyStore.addFilekey(key, item.fileKey)
           }
         }
       }
     }
-    console.log('exist file keys are:')
-    console.log(fileKeyStore.getUploadedFileKeys())
   }
-
+  const fileKeyStore = createFileKeyStore()
   kintone.events.on(['app.record.detail.show'], (event) => {
-    console.log(event.record)
-
     // step 1: 得到所有附件的字段代码
-    let allAttachmentFieldCode = extractFileTypes(event.record)
-    // console.log(allAttachmentFieldCode)
+    const allAttachmentFieldCode = extractFileTypes(event.record)
     // step 2: 根据字段代码，生成【读剪切板中图片的按钮】，放在每个附件的元素里
     generateAttachImageButton(allAttachmentFieldCode)
     // step 3: 初始化fileKeyStore
@@ -247,8 +185,11 @@ const app = () => {
     getAlredayExsitFileKeys(event.record)
     // step 4: 在空白处生成一个【提交】按钮，点击后，更新record
     const headerMenuSpace = kintone.app.record.getHeaderMenuSpaceElement()
-    let updateButton = document.createElement('button')
-    updateButton.innerText = '画像一括保存'
+    const updateButton = document.createElement('button')
+    updateButton.classList.add('gaia-ui-actionmenu-save')
+    updateButton.style.width = 'fit-content'
+    updateButton.style.minWidth = 'unset'
+    updateButton.innerText = 'save all'
     updateButton.addEventListener('click', () => {
       updateRecord()
     })
