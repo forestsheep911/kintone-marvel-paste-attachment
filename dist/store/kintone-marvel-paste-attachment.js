@@ -13,7 +13,7 @@
 // @match               https://*.s.cybozu.cn/k/*/show*
 // @match               https://*.s.cybozu.com/k/*/show*
 // @match               https://*.s.kintone.com/k/*/show*
-// @require             hhttps://unpkg.com/@kintone/rest-api-client@latest/umd/KintoneRestAPIClient.js
+// @require             https://unpkg.com/@kintone/rest-api-client@latest/umd/KintoneRestAPIClient.js
 // @require             https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuidv4.min.js
 // @run-at              document-end
 // @supportURL          https://github.com/forestsheep911/kintone-marvel-paste-attachment/issues
