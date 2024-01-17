@@ -8,7 +8,7 @@ declare global {
 const app = () => {
   const kintoneRestAPIClient = new window.KintoneRestAPIClient()
   type fieldCodeFileKeyPair = { [property: string]: { value: { fileKey: string }[] } }
-  type AttachFiledCode = string[]
+  type AttachFiledCodes = string[]
 
   function createFileKeyStore() {
     let uploadedfilekeys: fieldCodeFileKeyPair = {}
@@ -37,8 +37,8 @@ const app = () => {
     }
   }
 
-  function extractFileTypes(obj: any): AttachFiledCode {
-    const result: AttachFiledCode = []
+  function extractFileTypes(obj: any): AttachFiledCodes {
+    const result: AttachFiledCodes = []
     for (const key in obj) {
       if (obj[key] && typeof obj[key] === 'object') {
         if (obj[key].type === 'FILE') {
@@ -115,7 +115,7 @@ const app = () => {
     return blockLi
   }
 
-  function generateAttachImageButton(attachFieldCodeList: AttachFiledCode) {
+  function generateAttachImageButton(attachFieldCodeList: AttachFiledCodes) {
     // find all attach file container
     const containers = attachFieldCodeList.map((fieldCode) => {
       const container = kintone.app.record.getFieldElement(fieldCode)
@@ -177,11 +177,14 @@ const app = () => {
   const fileKeyStore = createFileKeyStore()
   kintone.events.on(['app.record.detail.show'], (event) => {
     // step 1: 得到所有附件的字段代码
-    const allAttachmentFieldCode = extractFileTypes(event.record)
+    const allAttachmentFieldCodes = extractFileTypes(event.record)
+    if (allAttachmentFieldCodes.length === 0) {
+      return event
+    }
     // step 2: 根据字段代码，生成【读剪切板中图片的按钮】，放在每个附件的元素里
-    generateAttachImageButton(allAttachmentFieldCode)
+    generateAttachImageButton(allAttachmentFieldCodes)
     // step 3: 初始化fileKeyStore
-    fileKeyStore.initialize(allAttachmentFieldCode)
+    fileKeyStore.initialize(allAttachmentFieldCodes)
     getAlredayExsitFileKeys(event.record)
     // step 4: 在空白处生成一个【提交】按钮，点击后，更新record
     const headerMenuSpace = kintone.app.record.getHeaderMenuSpaceElement()
