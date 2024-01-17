@@ -1,6 +1,6 @@
 {
   "name": "kintone-marvel-paste-attachment",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Allows you to paste images from the clipboard into the attachment field of kintone.",
   "main": "",
   "scripts": {
